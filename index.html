@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        :root {
+            --bg-main: #181A20;
+            --panel-bg: #20232B;
+            --card-bg: #181A20;
+            --accent-lime: #B6FF2E;
+            --text-main: #FFFFFF;
+            --text-muted: #8A8E9B;
+            --border-subtle: #2A2D37;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: clamp(10px, 3vw, 20px);
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            padding: clamp(14px, 3vw, 22px);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .panel-header {
+            font-size: 1rem;
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .panel-header .meta {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .source-footer {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        .source-footer a {
+            color: inherit;
+        }
+
+        .btn {
+            display: block;
+            background: var(--accent-lime);
+            color: #000;
+            padding: 13px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.88;
+        }
+
+        .select-box {
+            width: 100%;
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            padding: 10px 12px;
+            border-radius: 4px;
+            font: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .select-box:focus {
+            outline: none;
+            border-color: var(--accent-lime);
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        /* --- WETTERVERGLEICH --- */
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0 24px;
+        }
+
+        .city-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-weight: 600;
+            padding: 4px 0 6px;
+            border-bottom: 1px solid var(--accent-lime);
+        }
+
+        .city-header small {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .weather-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .weather-row .cond {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-right: 6px;
+        }
+
+        .weather-row .temp {
+            white-space: nowrap;
+        }
+
+        /* --- SKIBERICHT --- */
+        .ski-info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .ski-stat {
+            padding: 10px 4px;
+            text-align: center;
+        }
+
+        .ski-stat + .ski-stat {
+            border-left: 1px solid var(--border-subtle);
+        }
+
+        .ski-stat-val {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--accent-lime);
+        }
+
+        .ski-stat-lbl {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .ski-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .ski-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: clamp(0.72rem, 1.4vw, 0.82rem);
+        }
+
+        .ski-table th {
+            padding: 6px 3px;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .ski-table td {
+            padding: 6px 3px;
+            border-bottom: 1px solid var(--border-subtle);
+            vertical-align: middle;
+        }
+
+        .ski-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ski-table .col-day {
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .td-day {
+            font-weight: 600;
+        }
+
+        .td-temp {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sub {
+            display: block;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .td-cond {
+            color: var(--text-muted);
+        }
+
+        .badge {
+            display: inline-block;
+            width: 100%;
+            padding: 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .bg-wind-strong  { background: #FF3B30; color: #FFF; }
+        .bg-wind-mid     { background: #FFD1D1; color: #800000; }
+        .bg-precip-blue  { background: #5AC8FA; color: #000; }
+        .bg-sun-bright   { background: #FFCC00; color: #000; }
+        .bg-sun-light    { background: #FFF3B3; color: #000; }
+
+        .status {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            padding: 12px 0;
+        }
+
+        /* --- REGENRADAR --- */
+        .radar-wrap {
+            height: clamp(340px, 42vw, 470px);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-main);
+        }
+
+        .radar-wrap iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+
+        <!-- PANEL 1: WETTER & SKIBERICHT -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>10-Tage-Wetterbericht</span>
+                <span class="meta">Landshut &amp; Wiesing</span>
+            </div>
+
+            <div class="weather-grid" id="weatherGrid"></div>
+            <div class="source-footer">Quelle: Open-Meteo &amp; Wetter.de</div>
+
+            <div class="panel-header">
+                <span>Zillertal Skibericht</span>
+                <span class="meta">10 Tage</span>
+            </div>
+
+            <div>
+                <label class="field-label" for="skiSelect">Skigebiet</label>
+                <select id="skiSelect" class="select-box">
+                    <option value="hochzillertal">Hochzillertal - Kaltenbach / Fügen</option>
+                    <option value="zillertal_arena">Zillertal Arena (Zell &amp; Gerlos)</option>
+                    <option value="hintertux">Hintertuxer Gletscher</option>
+                    <option value="mayrhofen">Mayrhofen - Penken / Ahorn</option>
+                    <option value="spieljoch">Spieljoch - Fügen</option>
+                </select>
+            </div>
+
+            <div id="skiDetails"></div>
+            <div class="source-footer">
+                Prognose für <span id="skiElev"></span> m · <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> · Schneehöhe aus Modell, nicht gemessen
+            </div>
+        </div>
+
+        <!-- PANEL 2: RING & REGENVORHERSAGE -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Ring Video Doorbell</span>
+            </div>
+
+            <a href="ring://" class="btn">Ring App öffnen</a>
+
+            <div class="panel-header">
+                <span>Regenvorhersage</span>
+                <span class="meta">Windy</span>
+            </div>
+
+            <div>
+                <label class="field-label" for="radarRange">Zeitraum</label>
+                <select id="radarRange" class="select-box">
+                    <option value="24" selected>24 Stunden</option>
+                    <option value="48">48 Stunden</option>
+                    <option value="72">3 Tage</option>
+                    <option value="120">5 Tage</option>
+                    <option value="168">7 Tage</option>
+                </select>
+            </div>
+
+            <div class="radar-wrap">
+                <iframe id="radarFrame" title="Windy Regenradar und Niederschlagsvorhersage" loading="lazy"
+                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+
+            <div class="source-footer">
+                Quelle: <a href="https://www.windy.com/48.55/12.20?rain,8" target="_blank" rel="noopener">Windy.com</a> · ECMWF
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- WETTER LANDSHUT / WIESING ---
+        // Tagesbezeichnungen werden bei jedem Laden aus dem aktuellen Datum berechnet
+        function dayInfo(offset, weekdayStyle) {
+            const d = new Date();
+            d.setHours(12, 0, 0, 0); // Mittag, damit Zeitumstellungen nichts verschieben
+            d.setDate(d.getDate() + offset);
+            const weekday = d.toLocaleDateString('de-DE', { weekday: weekdayStyle }).replace('.', '');
+            const label = offset === 0 ? 'Heute' : offset === 1 ? 'Morgen' : weekday;
+            const date = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+            return { label, date };
+        }
+        const cities = [
+            { name: "Landshut", country: "DE", days: [
+                ["sonnig", "22° / 11°"], ["wolkig", "20° / 10°"], ["Regen", "16° / 8°"], ["Regen", "14° / 7°"], ["wolkig", "17° / 8°"],
+                ["sonnig", "19° / 9°"], ["sonnig", "21° / 10°"], ["wolkig", "18° / 9°"], ["Regen", "15° / 7°"], ["sonnig", "17° / 8°"]
+            ]},
+            { name: "Wiesing", country: "AT", days: [
+                ["sonnig", "19° / 8°"], ["wolkig", "18° / 7°"], ["Regen", "13° / 5°"], ["Gewitter", "9° / 2°"], ["wolkig", "12° / 1°"],
+                ["sonnig", "15° / 4°"], ["sonnig", "16° / 5°"], ["wolkig", "14° / 3°"], ["Regen", "11° / 2°"], ["sonnig", "13° / 3°"]
+            ]}
+        ];
+
+        document.getElementById('weatherGrid').innerHTML = cities.map(city => `
+            <div>
+                <div class="city-header">${city.name}<small>${city.country}</small></div>
+                ${city.days.map(([cond, temp], i) => `
+                    <div class="weather-row">
+                        <span>${dayInfo(i, 'short').label}</span>
+                        <span><span class="cond">${cond}</span><span class="temp">${temp}</span></span>
+                    </div>`).join('')}
+            </div>`).join('');
+
+        // --- SKIGEBIETE (Live-Prognose von Open-Meteo, Höhe = Bergstation) ---
+        const skiAreas = {
+            hochzillertal:   { lat: 47.28, lon: 11.83, elev: 2400 },
+            zillertal_arena: { lat: 47.24, lon: 11.97, elev: 2500 },
+            hintertux:       { lat: 47.08, lon: 11.67, elev: 3250 },
+            mayrhofen:       { lat: 47.17, lon: 11.87, elev: 2100 },
+            spieljoch:       { lat: 47.33, lon: 11.85, elev: 1800 }
+        };
+
+        const skiSelect = document.getElementById('skiSelect');
+        const skiDetails = document.getElementById('skiDetails');
+        const skiCache = {};
+        const compass = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+
+        const fmt = (n, digits = 0) => n.toLocaleString('de-DE', { maximumFractionDigits: digits });
+
+        function weatherText(code) {
+            if (code === 0) return 'sonnig';
+            if (code === 1) return 'heiter';
+            if (code === 2) return 'wolkig';
+            if (code === 3) return 'bedeckt';
+            if (code === 45 || code === 48) return 'Nebel';
+            if (code >= 51 && code <= 57) return 'Niesel';
+            if (code === 66 || code === 67) return 'Eisregen';
+            if ((code >= 61 && code <= 65) || (code >= 80 && code <= 82)) return 'Regen';
+            if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'Schnee';
+            if (code >= 95) return 'Gewitter';
+            return '-';
+        }
+
+        async function loadSki(key) {
+            if (skiCache[key]) return skiCache[key];
+            const a = skiAreas[key];
+            const params = new URLSearchParams({
+                latitude: a.lat, longitude: a.lon, elevation: a.elev,
+                daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum,precipitation_probability_max,wind_gusts_10m_max,wind_direction_10m_dominant,sunshine_duration',
+                hourly: 'freezing_level_height,snow_depth',
+                wind_speed_unit: 'kmh', timezone: 'Europe/Berlin', forecast_days: 10
+            });
+            const res = await fetch('https://api.open-meteo.com/v1/forecast?' + params);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return (skiCache[key] = await res.json());
+        }
+
+        function renderSki(json, elev) {
+            const d = json.daily, h = json.hourly;
+
+            // aktuelle Stunde im Stundenraster (0 = heute 00:00)
+            const now = Math.min(Math.max(Math.floor((Date.now() - new Date(h.time[0]).getTime()) / 3600000), 0), h.time.length - 1);
+            const snowDepth = Math.round((h.snow_depth[now] || 0) * 100);
+            const freezing = Math.round(h.freezing_level_height[now]);
+            const newSnow = n => d.snowfall_sum.slice(0, n).reduce((a, b) => a + b, 0);
+
+            const rows = d.time.map((_, i) => {
+                const day = dayInfo(i, 'long');
+                const gust = Math.round(d.wind_gusts_10m_max[i]);
+                const windClass = gust >= 60 ? 'bg-wind-strong' : gust >= 40 ? 'bg-wind-mid' : '';
+                const snow = d.snowfall_sum[i], rain = d.precipitation_sum[i];
+                const precip = rain < 0.1 ? '-' : (snow >= 0.5 ? fmt(snow, 1) + ' cm' : fmt(rain, 1) + ' l') +
+                    ' (' + d.precipitation_probability_max[i] + '%)';
+                const precipClass = rain >= 2 ? 'bg-precip-blue' : '';
+                const sunH = Math.round(d.sunshine_duration[i] / 3600);
+                const sunClass = sunH >= 6 ? 'bg-sun-bright' : sunH >= 2 ? 'bg-sun-light' : '';
+                const noon = i * 24 + 12;
+                return `
+                <tr>
+                    <td class="col-day td-day">${day.label}<span class="sub">${day.date}</span></td>
+                    <td class="td-temp">${Math.round(d.temperature_2m_max[i])}°/${Math.round(d.temperature_2m_min[i])}°<span class="sub">${fmt(Math.round(h.freezing_level_height[noon]))} m</span></td>
+                    <td class="td-cond">${weatherText(d.weather_code[i])}</td>
+                    <td><span class="badge ${windClass}">${compass[Math.round(d.wind_direction_10m_dominant[i] / 45) % 8]} ${gust}</span></td>
+                    <td><span class="badge ${precipClass}">${precip}</span></td>
+                    <td><span class="badge ${sunClass}">${sunH} h</span></td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('skiElev').textContent = fmt(elev);
+            skiDetails.innerHTML = `
+                <div class="ski-info-grid">
+                    <div class="ski-stat"><div class="ski-stat-val">${snowDepth} cm</div><div class="ski-stat-lbl">Schneehöhe</div></div>
+                    <div class="ski-stat"><div class="ski-stat-val">${fmt(newSnow(3))} cm</div><div class="ski-stat-lbl">Neuschnee 3 Tage</div></div>
+                    <div class="ski-stat"><div class="ski-stat-val">${fmt(newSnow(10))} cm</div><div class="ski-stat-lbl">Neuschnee 10 Tage</div></div>
+                    <div class="ski-stat"><div class="ski-stat-val">${fmt(freezing)} m</div><div class="ski-stat-lbl">Nullgradgrenze</div></div>
+                </div>
+                <div class="ski-table-wrapper">
+                    <table class="ski-table">
+                        <thead>
+                            <tr>
+                                <th class="col-day">Tag</th>
+                                <th>Max/Min</th>
+                                <th>Wetter</th>
+                                <th>Böen km/h</th>
+                                <th>Niederschlag</th>
+                                <th>Sonne</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        async function updateSkiData() {
+            const key = skiSelect.value;
+            skiDetails.innerHTML = '<p class="status">Lade Daten …</p>';
+            try {
+                const json = await loadSki(key);
+                if (key === skiSelect.value) renderSki(json, skiAreas[key].elev); // veraltete Antworten ignorieren
+            } catch (err) {
+                if (key === skiSelect.value) skiDetails.innerHTML = '<p class="status">Daten konnten nicht geladen werden. Bitte Seite neu laden.</p>';
+            }
+        }
+
+        skiSelect.addEventListener('change', updateSkiData);
+        updateSkiData();
+
+        // --- REGENVORHERSAGE (Windy-Einbettung, Standard: 24 Stunden) ---
+        const radarFrame = document.getElementById('radarFrame');
+        const radarRange = document.getElementById('radarRange');
+
+        function updateRadar() {
+            const params = new URLSearchParams({
+                lat: 48.55, lon: 12.20, detailLat: 48.55, detailLon: 12.20,
+                zoom: 8, level: 'surface', overlay: 'rain', product: 'ecmwf',
+                message: 'true', marker: 'true', type: 'map', location: 'coordinates',
+                calendar: radarRange.value, metricWind: 'km/h', metricTemp: '°C'
+            });
+            radarFrame.src = 'https://embed.windy.com/embed2.html?' + params;
+        }
+
+        radarRange.addEventListener('change', updateRadar);
+        updateRadar();
+    </script>
+</body>
+</html>
